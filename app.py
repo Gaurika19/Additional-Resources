@@ -20,20 +20,7 @@ def filter_links(links):
 # Streamlit UI
 st.title("🔍 Advanced Research Assistant")
 
-# # User Input for API Keys
-# if "GROQ_API_KEY" not in st.session_state:
-#     st.session_state.GROQ_API_KEY = st.text_input("Enter your Groq API Key:", type="password")
 
-# if "YOUTUBE_API_KEY" not in st.session_state:
-#     st.session_state.YOUTUBE_API_KEY = st.text_input("Enter your YouTube API Key:", type="password")
-
-# if "SERPAPI_KEY" not in st.session_state:
-#     st.session_state.SERPAPI_KEY = st.text_input("Enter your SerpAPI Key:", type="password")
-
-# # Ensure all API keys are entered before proceeding
-# if not all([st.session_state.GROQ_API_KEY, st.session_state.YOUTUBE_API_KEY, st.session_state.SERPAPI_KEY]):
-#     st.warning("Please enter all API keys to continue.")
-#     st.stop()
 
 # Initialize session state variables if they are not already set
 if "GROQ_API_KEY" not in st.session_state:
@@ -165,14 +152,14 @@ if st.button("Get Research Resources"):
     if topic:
         ai_summary, research_papers, youtube_videos = get_resources(topic)
         
-        st.subheader("📌 AI Summary")
+        st.subheader("AI Summary")
         st.write(ai_summary)
         
-        st.subheader("📖 Latest Research Papers")
+        st.subheader("Latest Research Papers")
         for paper in research_papers:
             st.markdown(paper)
         
-        st.subheader("🎥 YouTube Videos")
+        st.subheader("YouTube Videos")
         for video in youtube_videos:
             st.markdown(video)
         
