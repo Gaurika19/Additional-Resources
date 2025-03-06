@@ -8,20 +8,68 @@ from googleapiclient.discovery import build
 from docx import Document
 from io import BytesIO
 
-# Set API Keys (Replace with actual keys)
-GROQ_API_KEY = "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"
-YOUTUBE_API_KEY = "AIzaSyAs41Vz2WTfbFpZ7zyQtuJg3vrWlXvyJtQ"
-SERPAPI_KEY = "7d976710372c9c58dc12f0f68c7e7557a4ffab0dbac21be535f887b36177ecd0"  # For Google search
-
-# Initialize Groq Client
-groq_client = groq.Groq(api_key=GROQ_API_KEY)
-
 # Blacklisted domains
-BLACKLISTED_DOMAINS = ["coursera.org", "udemy.com", "edx.org", "skillshare.com", "khanacademy.org","simplilearn.com"]
+BLACKLISTED_DOMAINS = ["coursera.org", "udemy.com", "edx.org", "skillshare.com", "khanacademy.org", "simplilearn.com"]
 
 def filter_links(links):
     """Filters out links that belong to blacklisted domains"""
     return [link for link in links if not any(domain in link for domain in BLACKLISTED_DOMAINS)]
+
+
+
+# Streamlit UI
+st.title("🔍 Advanced Research Assistant")
+
+# # User Input for API Keys
+# if "GROQ_API_KEY" not in st.session_state:
+#     st.session_state.GROQ_API_KEY = st.text_input("Enter your Groq API Key:", type="password")
+
+# if "YOUTUBE_API_KEY" not in st.session_state:
+#     st.session_state.YOUTUBE_API_KEY = st.text_input("Enter your YouTube API Key:", type="password")
+
+# if "SERPAPI_KEY" not in st.session_state:
+#     st.session_state.SERPAPI_KEY = st.text_input("Enter your SerpAPI Key:", type="password")
+
+# # Ensure all API keys are entered before proceeding
+# if not all([st.session_state.GROQ_API_KEY, st.session_state.YOUTUBE_API_KEY, st.session_state.SERPAPI_KEY]):
+#     st.warning("Please enter all API keys to continue.")
+#     st.stop()
+
+# Initialize session state variables if they are not already set
+if "GROQ_API_KEY" not in st.session_state:
+    st.session_state.GROQ_API_KEY = ""
+
+if "YOUTUBE_API_KEY" not in st.session_state:
+    st.session_state.YOUTUBE_API_KEY = ""
+
+if "SERPAPI_KEY" not in st.session_state:
+    st.session_state.SERPAPI_KEY = ""
+
+# Function to update session state without causing a full reload
+def update_api_key(key, value):
+    st.session_state[key] = value
+
+# User input fields with default values from session state
+st.session_state.GROQ_API_KEY = st.text_input("Enter your Groq API Key:", 
+                                              value=st.session_state.GROQ_API_KEY, 
+                                              type="password", 
+                                              on_change=update_api_key, 
+                                              args=("GROQ_API_KEY", st.session_state.GROQ_API_KEY))
+
+st.session_state.YOUTUBE_API_KEY = st.text_input("Enter your YouTube API Key:", 
+                                                 value=st.session_state.YOUTUBE_API_KEY, 
+                                                 type="password", 
+                                                 on_change=update_api_key, 
+                                                 args=("YOUTUBE_API_KEY", st.session_state.YOUTUBE_API_KEY))
+
+st.session_state.SERPAPI_KEY = st.text_input("Enter your SerpAPI Key:", 
+                                             value=st.session_state.SERPAPI_KEY, 
+                                             type="password", 
+                                             on_change=update_api_key, 
+                                             args=("SERPAPI_KEY", st.session_state.SERPAPI_KEY))
+
+# Initialize Groq Client
+groq_client = groq.Groq(api_key=st.session_state.GROQ_API_KEY)
 
 def get_ai_summary(topic):
     """Generates an AI-based summary using Groq API"""
@@ -34,18 +82,6 @@ def get_ai_summary(topic):
     )
     return response.choices[0].message.content
 
-# def fetch_research_papers_google(query):
-#     """Fetches research papers using Google Search via SerpAPI"""
-#     search_url = "https://serpapi.com/search"
-#     params = {
-#         "engine": "google",
-#         "q": f"{query} site:arxiv.org OR site:springer.com OR site:sciencedirect.com OR site:researchgate.net OR site:nature.com OR site:ieee.org",
-#         "api_key": SERPAPI_KEY
-#     }
-#     response = requests.get(search_url, params=params)
-#     papers = []
-
-# To find generalized links over web
 def fetch_research_papers_google_scholar(query, num_pages=2):
     """Fetches research papers using Google Scholar via SerpAPI"""
     papers = []
@@ -55,47 +91,36 @@ def fetch_research_papers_google_scholar(query, num_pages=2):
             "engine": "google_scholar",
             "q": query,
             "start": page * 10,  # Pagination (10 results per page)
-            "api_key": SERPAPI_KEY
+            "api_key": st.session_state.SERPAPI_KEY
         }
-    response = requests.get("https://serpapi.com/search", params=params)
-    papers = []
+        response = requests.get("https://serpapi.com/search", params=params)
 
-    if response.status_code == 200:
-        results = response.json().get("organic_results", [])
-        for result in results:
-            title = result.get("title", "No Title")
-            link = result.get("link", "#")
-            snippet = result.get("snippet", "No summary available")
+        if response.status_code == 200:
+            results = response.json().get("organic_results", [])
+            for result in results:
+                title = result.get("title", "No Title")
+                link = result.get("link", "#")
+                snippet = result.get("snippet", "No summary available")
 
-            if not any(domain in link for domain in BLACKLISTED_DOMAINS):
-                papers.append(f"Title: {title}\nSummary: {snippet[:300]}...\n[Read More]({link})\n\n")
-    
+                if not any(domain in link for domain in BLACKLISTED_DOMAINS):
+                    papers.append(f"Title: {title}\nSummary: {snippet[:300]}...\n[Read More]({link})\n\n")
+
     return papers if papers else ["No relevant research papers found."]
 
 def get_youtube_videos(query):
     """Fetches YouTube videos using Google API"""
-    youtube = build("youtube", "v3", developerKey=YOUTUBE_API_KEY)
-    # request = youtube.search().list(q=query, part="id,snippet", minResults=5)
-
-
-    # request = youtube.search().list(
-    # q=query,
-    # part="id,snippet",
-    # maxResults=5,
-    # order="relevance" ) # Sort by best matching videos
-
+    youtube = build("youtube", "v3", developerKey=st.session_state.YOUTUBE_API_KEY)
 
     request = youtube.search().list(
-    q=query,
-    part="id,snippet",
-    maxResults=5,
-    order="viewCount"  # Sort by most viewed videos
-)
-
+        q=query,
+        part="id,snippet",
+        maxResults=5,
+        order="viewCount"  # Sort by most viewed videos
+    )
 
     response = request.execute()
-
     videos = []
+
     for item in response.get("items", []):
         if "videoId" in item.get("id", {}):
             video_title = item["snippet"]["title"]
@@ -133,8 +158,6 @@ def create_word_doc(topic, ai_summary, research_papers, youtube_videos):
     file_stream.seek(0)
     return file_stream
 
-st.title("Advanced Research Assistant")
-
 # User input
 topic = st.text_input("Enter a research topic:")
 
@@ -142,20 +165,20 @@ if st.button("Get Research Resources"):
     if topic:
         ai_summary, research_papers, youtube_videos = get_resources(topic)
         
-        st.subheader("AI Summary")
+        st.subheader("📌 AI Summary")
         st.write(ai_summary)
         
-        st.subheader("Latest Research Papers")
+        st.subheader("📖 Latest Research Papers")
         for paper in research_papers:
             st.markdown(paper)
         
-        st.subheader("YouTube Videos")
+        st.subheader("🎥 YouTube Videos")
         for video in youtube_videos:
             st.markdown(video)
         
         # Create downloadable Word document
         word_file = create_word_doc(topic, ai_summary, research_papers, youtube_videos)
-        st.download_button(label="Download Report (Word)",
+        st.download_button(label="📥 Download Report (Word)",
                            data=word_file,
                            file_name=f"{topic}_Research_Report.docx",
                            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
