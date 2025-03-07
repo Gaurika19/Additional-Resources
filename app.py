@@ -7,9 +7,10 @@ import feedparser
 from googleapiclient.discovery import build
 from docx import Document
 from io import BytesIO
+from docx.shared import Pt
 
 # Blacklisted domains
-BLACKLISTED_DOMAINS = ["coursera.org", "udemy.com", "edx.org", "skillshare.com", "khanacademy.org", "simplilearn.com"]
+BLACKLISTED_DOMAINS = ["coursera.org", "udemy.com", "edx.org", "skillshare.com", "khanacademy.org", "simplilearn.com", "geeksforgeeks"]
 
 def filter_links(links):
     """Filters out links that belong to blacklisted domains"""
@@ -20,7 +21,20 @@ def filter_links(links):
 # Streamlit UI
 st.title("🔍 Advanced Research Assistant")
 
+# # User Input for API Keys
+# if "GROQ_API_KEY" not in st.session_state:
+#     st.session_state.GROQ_API_KEY = st.text_input("Enter your Groq API Key:", type="password")
 
+# if "YOUTUBE_API_KEY" not in st.session_state:
+#     st.session_state.YOUTUBE_API_KEY = st.text_input("Enter your YouTube API Key:", type="password")
+
+# if "SERPAPI_KEY" not in st.session_state:
+#     st.session_state.SERPAPI_KEY = st.text_input("Enter your SerpAPI Key:", type="password")
+
+# # Ensure all API keys are entered before proceeding
+# if not all([st.session_state.GROQ_API_KEY, st.session_state.YOUTUBE_API_KEY, st.session_state.SERPAPI_KEY]):
+#     st.warning("Please enter all API keys to continue.")
+#     st.stop()
 
 # Initialize session state variables if they are not already set
 if "GROQ_API_KEY" not in st.session_state:
@@ -102,7 +116,7 @@ def get_youtube_videos(query):
         q=query,
         part="id,snippet",
         maxResults=5,
-        order="viewCount"  # Sort by most viewed videos
+        order="relevance"  # Sort by most viewed videos
     )
 
     response = request.execute()
@@ -123,27 +137,145 @@ def get_resources(topic):
     youtube_videos = get_youtube_videos(topic)
     return ai_summary, research_papers, youtube_videos
 
+# Without Proper same name of document
+# def create_word_doc(topic, ai_summary, research_papers, youtube_videos):
+#     """Creates a downloadable Word document with research content"""
+#     doc = Document()
+#     doc.add_heading(f"Research Report on {topic}", level=1)
+
+#     doc.add_heading("AI Summary", level=2)
+#     doc.add_paragraph(ai_summary)
+
+#     doc.add_heading("Latest Research Papers", level=2)
+#     for paper in research_papers:
+#         doc.add_paragraph(paper)
+
+#     doc.add_heading("YouTube Videos", level=2)
+#     for video in youtube_videos:
+#         doc.add_paragraph(video)
+
+#     # Save document to in-memory file
+#     file_stream = BytesIO()
+#     doc.save(file_stream)
+#     file_stream.seek(0)
+#     return file_stream
+
+# Code for Dynamic Heading of topics
+# def create_word_doc(topic, ai_summary, research_papers, youtube_videos):
+#     """Creates a downloadable Word document with research content"""
+#     doc = Document()
+#     doc.add_heading(f"{topic} - Summary", level=1)  # Change heading here
+
+#     doc.add_paragraph(ai_summary)
+
+#     doc.add_heading("Latest Research Papers", level=2)
+#     for paper in research_papers:
+#         doc.add_paragraph(paper)
+
+#     doc.add_heading("YouTube Videos", level=2)
+#     for video in youtube_videos:
+#         doc.add_paragraph(video)
+
+#     # Save document to in-memory file
+#     file_stream = BytesIO()
+#     doc.save(file_stream)
+#     file_stream.seek(0)
+#     return file_stream
+
+# def create_word_doc(topic, ai_summary, research_papers, youtube_videos):
+#     """Creates a downloadable Word document with research content"""
+#     doc = Document()
+
+#     # Title (Topic + Summary) - Bold and Large
+#     title = doc.add_heading(level=1)
+#     run = title.add_run(f"{topic} - Summary")
+#     run.bold = True
+#     run.font.size = Pt(16)  # Increase size
+
+#     # Summary Section
+#     doc.add_paragraph(ai_summary)
+
+#     # Latest Research Papers (Bold & Larger)
+#     research_heading = doc.add_heading(level=2)
+#     run = research_heading.add_run("Latest Research Papers")
+#     run.bold = True
+#     run.font.size = Pt(14)
+
+#     for paper in research_papers:
+#         doc.add_paragraph(paper)
+    # # YouTube Videos Section (Bold & Larger)
+    # youtube_heading = doc.add_heading(level=2)
+    # run = youtube_heading.add_run("YouTube Videos")
+    # run.bold = True
+    # run.font.size = Pt(14)
+
+    # for video in youtube_videos:
+    #     doc.add_paragraph(video)
+
+    # # Save document to in-memory file
+    # file_stream = BytesIO()
+    # doc.save(file_stream)
+    # file_stream.seek(0)
+    # return file_stream
+
 def create_word_doc(topic, ai_summary, research_papers, youtube_videos):
     """Creates a downloadable Word document with research content"""
     doc = Document()
-    doc.add_heading(f"Research Report on {topic}", level=1)
 
-    doc.add_heading("AI Summary", level=2)
-    doc.add_paragraph(ai_summary)
+    # Add title
+    title = doc.add_paragraph()
+    title_run = title.add_run(f"Research Report on {topic}")
+    title_run.bold = True
+    title_run.font.size = Pt(20)
 
-    doc.add_heading("Latest Research Papers", level=2)
+    # Add a blank line for spacing
+    doc.add_paragraph()
+
+    # Add Summary Heading
+    summary_heading = doc.add_paragraph()
+    summary_run = summary_heading.add_run(f"{topic} - Summary")
+    summary_run.bold = True
+    summary_run.font.size = Pt(16)
+
+    # Add Summary Content
+    #doc.add_paragraph(ai_summary)
+    summary_paragraph = doc.add_paragraph()
+    summary_paragraph.add_run(ai_summary)
+
+    # Add a blank line for spacing
+    doc.add_paragraph()
+
+    # Add Research Papers Heading
+    research_heading = doc.add_paragraph()
+    research_run = research_heading.add_run("Latest Research Papers")
+    research_run.bold = True
+    research_run.font.size = Pt(16)
+
     for paper in research_papers:
-        doc.add_paragraph(paper)
+        paper_paragraph = doc.add_paragraph()
+        paper_paragraph.add_run(paper)
 
-    doc.add_heading("YouTube Videos", level=2)
+    # Add a blank line for spacing
+    doc.add_paragraph()
+
+    # Add YouTube Videos Heading
+    video_heading = doc.add_paragraph()
+    video_run = video_heading.add_run("YouTube Videos")
+    video_run.bold = True
+    video_run.font.size = Pt(16)
+
+
     for video in youtube_videos:
-        doc.add_paragraph(video)
+        video_paragraph = doc.add_paragraph()
+        video_paragraph.add_run(video)
 
     # Save document to in-memory file
+    from io import BytesIO
     file_stream = BytesIO()
     doc.save(file_stream)
     file_stream.seek(0)
     return file_stream
+
 
 # User input
 topic = st.text_input("Enter a research topic:")
@@ -152,17 +284,18 @@ if st.button("Get Research Resources"):
     if topic:
         ai_summary, research_papers, youtube_videos = get_resources(topic)
         
-        st.subheader("AI Summary")
+        st.markdown(f"## **{topic} - Summary**")  # Bold title
         st.write(ai_summary)
-        
-        st.subheader("Latest Research Papers")
+
+        st.markdown("## **Latest Research Papers**")  # Bold section title
         for paper in research_papers:
             st.markdown(paper)
-        
-        st.subheader("YouTube Videos")
+
+        st.markdown("## **YouTube Videos**")  # Bold section title
         for video in youtube_videos:
             st.markdown(video)
-        
+
+
         # Create downloadable Word document
         word_file = create_word_doc(topic, ai_summary, research_papers, youtube_videos)
         st.download_button(label="📥 Download Report (Word)",
