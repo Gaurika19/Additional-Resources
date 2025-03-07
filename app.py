@@ -284,14 +284,14 @@ if st.button("Get Research Resources"):
     if topic:
         ai_summary, research_papers, youtube_videos = get_resources(topic)
         
-        st.markdown(f"## **{topic} - Summary**")  # Bold title
+        st.markdown(f"## 📌 **{topic} - Summary**")  # Bold title
         st.write(ai_summary)
 
-        st.markdown("## **Latest Research Papers**")  # Bold section title
+        st.markdown("## 📖 **Latest Research Papers**")  # Bold section title
         for paper in research_papers:
             st.markdown(paper)
 
-        st.markdown("## **YouTube Videos**")  # Bold section title
+        st.markdown("## 🎥 **YouTube Videos**")  # Bold section title
         for video in youtube_videos:
             st.markdown(video)
 
