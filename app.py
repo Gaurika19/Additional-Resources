@@ -72,10 +72,21 @@ st.session_state.SERPAPI_KEY = st.text_input("Enter your SerpAPI Key:",
 # Initialize Groq Client
 groq_client = groq.Groq(api_key=st.session_state.GROQ_API_KEY)
 
+# def get_ai_summary(topic):
+#     """Generates an AI-based summary using Groq API"""
+#     response = groq_client.chat.completions.create(
+#         model="mixtral-8x7b-32768",
+#         messages=[
+#             {"role": "system", "content": "You are a research assistant."},
+#             {"role": "user", "content": f"Provide a summary of {topic}."}
+#         ]
+#     )
+#     return response.choices[0].message.content
+
 def get_ai_summary(topic):
     """Generates an AI-based summary using Groq API"""
     response = groq_client.chat.completions.create(
-        model="mixtral-8x7b-32768",
+        model="llama3-70b-8192",
         messages=[
             {"role": "system", "content": "You are a research assistant."},
             {"role": "user", "content": f"Provide a summary of {topic}."}
