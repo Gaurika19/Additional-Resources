@@ -18,8 +18,8 @@ import feedparser
 from googleapiclient.discovery import build
 
 # Step 1: Set API Keys (Replace with your actual keys)
-GROQ_API_KEY = "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"
-YOUTUBE_API_KEY = "AIzaSyAs41Vz2WTfbFpZ7zyQtuJg3vrWlXvyJtQ"
+GROQ_API_KEY = ""
+YOUTUBE_API_KEY = ""
 
 # Step 2: Initialize Groq Client
 groq_client = groq.Groq(api_key=GROQ_API_KEY)
